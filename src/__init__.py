@@ -1,0 +1,2 @@
+"""Hit & Check application package."""
+
