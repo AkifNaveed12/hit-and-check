@@ -1,5 +1,5 @@
 # Hit & Check
-
+- https://hit-and-check-jv5bigtxku5yhvsut9utnj.streamlit.app/
 Hit & Check is a Streamlit-based cybersecurity awareness app that demonstrates how 4-digit numeric demo PINs can be tested through brute-force and dictionary-style simulations.
 
 The app is educational. Do not enter real ATM, banking, account, recovery, or personal PINs.
