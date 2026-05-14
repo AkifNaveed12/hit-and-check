@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
 
 from src.attacks import run_attack
 from src.awareness_demo import render_awareness_demo
@@ -132,21 +134,117 @@ def render_ai_report() -> None:
         st.info("Generate the AI report to view detailed guidance.")
         return
 
-    st.subheader(report.get("risk_level", "Risk Report"))
-    st.write(report.get("summary", "No summary available."))
-    st.write("Strength score:", report.get("strength_score", "N/A"))
-    st.write("Hack probability:", report.get("hack_probability", "N/A"))
-    st.write(report.get("attack_explanation", ""))
+    # Extract data with fallbacks
+    risk_level = str(report.get("risk_level", "Unknown")).upper()
+    summary = report.get("summary", "No summary available.")
+    
+    # Parse scores, fallback to 0 if missing or invalid
+    try:
+        strength_score = int(report.get("strength_score", 0))
+    except (ValueError, TypeError):
+        strength_score = 0
+        
+    try:
+        hack_prob = int(report.get("hack_probability", 0))
+    except (ValueError, TypeError):
+        hack_prob = 0
 
-    st.markdown("**Key Findings**")
-    for item in report.get("key_findings", []):
-        st.write(f"- {item}")
+    attack_explanation = report.get("attack_explanation", "")
+    key_findings = report.get("key_findings", [])
+    recommendations = report.get("recommendations", [])
 
-    st.markdown("**Recommendations**")
-    for item in report.get("recommendations", []):
-        st.write(f"- {item}")
+    # Dynamic styling based on risk level
+    risk_color = "#888888" # default gray
+    if "HIGH" in risk_level or "CRITICAL" in risk_level:
+        risk_color = "#ff4b4b" # red
+    elif "MEDIUM" in risk_level:
+        risk_color = "#ffa421" # orange
+    elif "LOW" in risk_level:
+        risk_color = "#00c04b" # green
 
-    with st.expander("Raw JSON"):
+    # Attractive Header Banner
+    st.markdown(f"""
+        <div style="background-color: {risk_color}15; padding: 20px; border-radius: 12px; border-left: 6px solid {risk_color}; margin-bottom: 25px;">
+            <h2 style="color: {risk_color}; margin-top: 0; margin-bottom: 10px;">🛡️ AI Security Report: {risk_level} RISK</h2>
+            <p style="font-size: 16px; margin: 0; color: #ececed;">{summary}</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # 2-column layout for visual gauges
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Gauge Chart for Strength Score
+        fig_strength = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = strength_score,
+            title = {'text': "PIN Strength Score", 'font': {'size': 22}},
+            gauge = {
+                'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "white"},
+                'bar': {'color': "#1f77b4"},
+                'bgcolor': "rgba(0,0,0,0)",
+                'borderwidth': 2,
+                'bordercolor': "gray",
+                'steps': [
+                    {'range': [0, 40], 'color': '#ff4b4b'},
+                    {'range': [40, 70], 'color': '#ffa421'},
+                    {'range': [70, 100], 'color': '#00c04b'}],
+            }
+        ))
+        fig_strength.update_layout(height=300, margin=dict(l=20, r=20, t=50, b=20), paper_bgcolor="rgba(0,0,0,0)", font={'color': "white"})
+        st.plotly_chart(fig_strength, use_container_width=True)
+
+    with col2:
+        # Gauge Chart for Hack Probability
+        fig_hack = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = hack_prob,
+            title = {'text': "Hack Probability (%)", 'font': {'size': 22}},
+            gauge = {
+                'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "white"},
+                'bar': {'color': "#d62728"},
+                'bgcolor': "rgba(0,0,0,0)",
+                'borderwidth': 2,
+                'bordercolor': "gray",
+                'steps': [
+                    {'range': [0, 30], 'color': '#00c04b'},
+                    {'range': [30, 70], 'color': '#ffa421'},
+                    {'range': [70, 100], 'color': '#ff4b4b'}],
+            }
+        ))
+        fig_hack.update_layout(height=300, margin=dict(l=20, r=20, t=50, b=20), paper_bgcolor="rgba(0,0,0,0)", font={'color': "white"})
+        st.plotly_chart(fig_hack, use_container_width=True)
+
+    st.markdown("---")
+
+    # Explanation Section
+    st.markdown("### 🔍 Attack Explanation")
+    st.info(attack_explanation, icon="💡")
+
+    st.markdown("---")
+
+    # Findings and Recommendations in tables side-by-side
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        st.markdown("### ⚠️ Key Findings")
+        if key_findings:
+            df_findings = pd.DataFrame({"Findings": key_findings})
+            st.dataframe(df_findings, use_container_width=True, hide_index=True)
+        else:
+            st.info("No key findings reported.")
+
+    with col4:
+        st.markdown("### 🛡️ Recommendations")
+        if recommendations:
+            df_rec = pd.DataFrame({"Actionable Recommendations": recommendations})
+            st.dataframe(df_rec, use_container_width=True, hide_index=True)
+        else:
+            st.info("No recommendations reported.")
+
+    st.markdown("---")
+    
+    with st.expander("Show Raw AI Analysis JSON"):
         st.json(report)
 
 

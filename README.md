@@ -13,8 +13,10 @@ The app is educational. Do not enter real ATM, banking, account, recovery, or pe
 - Dictionary attack simulation
 - Combined attack simulation
 - Strength scoring and risk metrics
-- Groq-powered AI report with local fallback
-- Groq-powered chatbot with local fallback
+- Highly graphical AI Security Report with dynamic color-coding
+- Interactive Plotly gauge charts for PIN Strength and Hack Probability
+- Structured Pandas tables for Key Findings and Recommendations
+- Groq-powered AI analysis and chatbot with local fallback
 - Email report support
 - Safe in-app awareness demo
 
